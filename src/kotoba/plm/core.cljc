@@ -13,7 +13,10 @@
 (def coverage-metrics ["Requirement trace" "BOM completeness" "ECO approval" "Supplier risk" "Manufacturing handoff" "Service feedback"])
 
 (defn extension [filename]
-  (some-> filename (str/split #"\\.") last str/lower-case (str ".")))
+  (when filename
+    (let [parts (str/split filename #"\.")]
+      (when (< 1 (count parts))
+        (str "." (str/lower-case (last parts)))))))
 
 (defn classify-artifact [filename]
   (let [ext (extension filename)]
