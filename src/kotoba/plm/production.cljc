@@ -23,7 +23,7 @@
   (let [d (db/db conn)]
     (when-not (plm/released? d parent)
       (throw (ex-info "parent not released" {:item parent})))
-    (let [qty   (bigdec qty)
+    (let [qty   (erp/->bigdec qty)
           comps (for [{:keys [child] cq :qty} (plm/mbom-children d parent)]
                   (let [need (* cq qty)
                         cstd (or (db/attr d :erp.inventory/std-cost    [:erp.inventory/id (inv-id child)]) 0M)

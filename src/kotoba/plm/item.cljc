@@ -6,6 +6,12 @@
 
 (declare mbom-rows)
 
+(defn- ->bigdec
+  "Portable arbitrary-precision decimal: `bigdec` on the JVM, pass-through
+   under cljs (no bignum type there; callers already deal in js numbers)."
+  [x]
+  #?(:clj (bigdec x) :cljs x))
+
 ;; ───────────────────────────── constructors (tx maps) ──────────────────────
 
 (defn item-id [part-no rev] (str part-no "@" rev))
@@ -23,7 +29,7 @@
            :plm.item/make-buy  make-buy
            :plm.item/lifecycle :draft}
     category      (assoc :plm.item/category category)
-    std-unit-cost (assoc :plm.item/std-unit-cost (bigdec std-unit-cost))
+    std-unit-cost (assoc :plm.item/std-unit-cost (->bigdec std-unit-cost))
     package-ref   (assoc :plm.item/package-ref package-ref)))
 
 (defn bom-edge
@@ -36,7 +42,7 @@
   (cond-> {:plm.bom/id     (str parent "|" find-no "|" child)
            :plm.bom/parent [:plm.item/id parent]
            :plm.bom/child  [:plm.item/id child]
-           :plm.bom/qty    (bigdec qty)
+           :plm.bom/qty    (->bigdec qty)
            :plm.bom/uom    uom
            :plm.bom/find-no (long find-no)
            :plm.bom/view   view}
@@ -84,7 +90,7 @@
            :plm.eco/state       :draft
            :plm.eco/disposition disposition
            :plm.eco/affected    (mapv (fn [iid] [:plm.item/id iid]) affected)}
-    new-unit-cost (assoc :plm.eco/new-unit-cost (bigdec new-unit-cost))))
+    new-unit-cost (assoc :plm.eco/new-unit-cost (->bigdec new-unit-cost))))
 
 ;; ───────────────────────────── queries ─────────────────────────────────────
 

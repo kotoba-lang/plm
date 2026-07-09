@@ -83,7 +83,7 @@
   (let [d (db/db conn)]
     (when-not (plm/released? d iid)
       (throw (ex-info "cannot receive un-released item" {:item iid})))
-    (let [qty   (bigdec qty)
+    (let [qty   (erp/->bigdec qty)
           std   (db/attr d :erp.inventory/std-cost    [:erp.inventory/id (inv-id iid)])
           onh   (or (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id (inv-id iid)]) 0M)
           value (* std qty)
