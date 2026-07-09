@@ -20,7 +20,7 @@
                       {}
                       (plm/mbom-children d iid asof))
               (throw (ex-info "unknown / unmastered item" {:item iid}))))]
-    (go iid (bigdec qty) #{})))
+    (go iid (erp/->bigdec qty) #{})))
 
 (defn- on-hand [d iid]
   (or (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id (str "INV-" iid)]) 0M))
@@ -29,7 +29,7 @@
   "Pure MRP plan for `parent-id` × `demand` as of now: per buy item the gross,
    on-hand and net (gross − on-hand) requirement. No side effects."
   [d parent-id demand asof]
-  (->> (gross-requirements d parent-id (bigdec demand) asof)
+  (->> (gross-requirements d parent-id (erp/->bigdec demand) asof)
        (map (fn [[bid gross]]
               (let [onh (on-hand d bid)]
                 {:item bid :gross gross :on-hand onh :net (- gross onh)
@@ -59,5 +59,5 @@
                           (erp/ocel :po.created "4.0" [ptid])]))
                      orders)]
     (when (seq tx) (db/tx! conn tx))
-    {:ok true :parent parent-id :demand (bigdec demand)
+    {:ok true :parent parent-id :demand (erp/->bigdec demand)
      :plan rows :ordered (mapv #(select-keys % [:item :net :unit-cost]) orders)}))

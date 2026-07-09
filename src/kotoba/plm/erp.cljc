@@ -4,7 +4,13 @@
    Pure functions returning Datomic entity maps (no I/O)."
   (:require [kotoba.plm.db :as db]))
 
-(defn now ^java.util.Date [] (java.util.Date.))
+(defn now [] #?(:clj (java.util.Date.) :cljs (js/Date.)))
+
+(defn ->bigdec
+  "Portable arbitrary-precision decimal: `bigdec` on the JVM, pass-through
+   under cljs (no bignum type there; callers already deal in js numbers)."
+  [x]
+  #?(:clj (bigdec x) :cljs x))
 
 ;; ───────────────────────────── chart of accounts ───────────────────────────
 
@@ -22,8 +28,8 @@
    {:account \"1400\" :debit n :credit n :item iid?}. Throws if debits≠credits
    so an unbalanced posting can never reach the ledger."
   [{:keys [id date memo lines]}]
-  (let [dr (reduce + 0M (map #(bigdec (or (:debit %) 0M)) lines))
-        cr (reduce + 0M (map #(bigdec (or (:credit %) 0M)) lines))]
+  (let [dr (reduce + 0M (map #(->bigdec (or (:debit %) 0M)) lines))
+        cr (reduce + 0M (map #(->bigdec (or (:credit %) 0M)) lines))]
     (when (not= dr cr)
       (throw (ex-info "unbalanced journal" {:id id :debit dr :credit cr})))
     {:erp.journal/id    id
@@ -31,8 +37,8 @@
      :erp.journal/memo  memo
      :erp.journal/lines (mapv (fn [l]
                                 (cond-> {:erp.jline/account (:account l)
-                                         :erp.jline/debit   (bigdec (or (:debit l) 0M))
-                                         :erp.jline/credit  (bigdec (or (:credit l) 0M))}
+                                         :erp.jline/debit   (->bigdec (or (:debit l) 0M))
+                                         :erp.jline/credit  (->bigdec (or (:credit l) 0M))}
                                   (:item l) (assoc :erp.jline/item [:plm.item/id (:item l)])))
                               lines)}))
 
@@ -42,7 +48,7 @@
   (let [t (now)]
     {:erp.cost/id    (str iid "@" (.getTime t) "-" (subs (str (java.util.UUID/randomUUID)) 0 8))
      :erp.cost/item  [:plm.item/id iid]
-     :erp.cost/rolled (bigdec rolled)
+     :erp.cost/rolled (->bigdec rolled)
      :erp.cost/as-of t}))
 
 (defn ocel
