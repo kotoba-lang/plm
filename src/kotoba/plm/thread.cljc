@@ -103,7 +103,8 @@
 
 (defn release-eco!
   "ECO :draft → :released. Applies :new-unit-cost to affected :buy items, re-rolls
-   every MBOM parent that uses them, and posts an inventory-revaluation journal for
+   every MBOM ancestor that transitively consumes them (direct parents,
+   grandparents, and beyond), and posts an inventory-revaluation journal for
    on-hand × Δstandard — design change → standard cost change → P/L variance.
    No-op when already released / unknown."
   [conn eid]
@@ -117,8 +118,10 @@
       (let [new-cost (:plm.eco/new-unit-cost eco)
             affected (mapv :plm.item/id (:plm.eco/affected eco))
             ;; revalue the affected buy items' OWN inventory *and* every MBOM
-            ;; parent that consumes them — a standard change ripples both ways.
-            targets  (->> (concat affected (mapcat #(plm/parents-using d0 %) affected))
+            ;; ancestor that consumes them, transitively (grandparents and
+            ;; beyond too, not just direct parents) — a standard change
+            ;; ripples all the way up the BOM.
+            targets  (->> (concat affected (mapcat #(plm/ancestors-using d0 %) affected))
                           distinct sort vec)]
         ;; (1) release ECO + apply new standard cost to affected buy items
         (db/tx! conn
