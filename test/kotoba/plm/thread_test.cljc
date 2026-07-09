@@ -60,3 +60,36 @@
         ;; cost ↑ → inventory asset ↑ (Dr 1400) with a credit revaluation variance
         ;; (favorable), so 5900 carries a -1200 credit balance — the P/L impact.
         (is (= -1200M (get-in tb ["5900" :balance])) "revaluation variance hits P/L")))))
+
+(defn- three-level-world
+  "Buy item B → Make item S (consumes 1×B) → Make item T (consumes 1×S).
+   A grandparent-of-B BOM, so an ECO on B must revalue T too, not just S."
+  []
+  (let [conn (db/fresh-conn (str "t-" (System/nanoTime)))]
+    (db/tx! conn erp/chart)
+    (db/tx! conn
+      [(plm/item {:part-no "B" :make-buy :buy :std-unit-cost 100})
+       (plm/item {:part-no "S" :make-buy :make})
+       (plm/item {:part-no "T" :make-buy :make})])
+    (db/tx! conn
+      [(plm/bom-edge {:parent "S@A" :child "B@A" :qty 1 :find-no 1})
+       (plm/bom-edge {:parent "T@A" :child "S@A" :qty 1 :find-no 1})])
+    conn))
+
+(deftest eco-revalues-transitive-ancestors-not-just-direct-parents
+  (let [conn (three-level-world)]
+    (doseq [iid ["B@A" "S@A" "T@A"]] (thread/release-item! conn iid))
+    (thread/receive-goods! conn "T@A" 5)
+    (is (= 500M (erp/inventory-value (db/db conn))) "5 × 100 before ECO")
+    (db/tx! conn [(plm/change-order {:id "ECO-2" :affected ["B@A"] :new-unit-cost 130})])
+    (let [res (thread/release-eco! conn "ECO-2")]
+      (is (:ok res))
+      (is (= #{"B@A" "S@A" "T@A"} (set (map :parent (:parents res))))
+          "the affected buy item, its direct parent S, and the grandparent T are all re-rolled")
+      (is (= 130M (:new-std (some #(when (= "S@A" (:parent %)) %) (:parents res)))))
+      (is (= 130M (:new-std (some #(when (= "T@A" (:parent %)) %) (:parents res))))
+          "T's rolled cost (via S) is 130, same as B's new cost"))
+    (testing "T's own inventory record is re-rolled, not left stale"
+      (is (= 130M (db/attr (db/db conn) :erp.inventory/std-cost [:erp.inventory/id "INV-T@A"]))))
+    (testing "inventory value reflects the grandparent's revaluation too"
+      (is (= 650M (erp/inventory-value (db/db conn))) "5 × 130"))))

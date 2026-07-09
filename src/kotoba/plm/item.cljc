@@ -165,3 +165,20 @@
        (map first)
        sort
        vec))
+
+(defn ancestors-using
+  "Item ids of every MBOM ancestor that transitively consumes `iid`
+   (where-used, all levels — direct parents, grandparents, etc). Cycle-safe:
+   a `seen` frontier stops re-walking an already-visited ancestor."
+  [db iid]
+  (loop [frontier (parents-using db iid)
+         seen     #{}
+         acc      []]
+    (if (empty? frontier)
+      (vec (sort (distinct acc)))
+      (let [seen'      (into seen frontier)
+            next-level (->> frontier
+                            (mapcat #(parents-using db %))
+                            distinct
+                            (remove seen'))]
+        (recur next-level seen' (into acc frontier))))))
