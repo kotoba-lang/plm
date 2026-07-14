@@ -6,11 +6,16 @@
      issue:    Dr WIP(1500)        / Cr Inventory(1400, component) @ component std
      complete: Dr Inventory(1400)  / Cr WIP(1500)                  @ parent std
 
-   WIP closes to ~0 because parent std = Σ component std × qty (the roll-up
-   invariant from kotoba.plm.cost), so a balanced standard build leaves no WIP."
+   WIP closes to ~0 because parent std = Σ component std × qty [+ own BOP
+   process cost] (the roll-up invariant from kotoba.plm.cost), so a balanced
+   standard build leaves no WIP. When the parent has a kotoba.plm.routing
+   routing, its labor/overhead is absorbed into WIP from account 5100 before
+   WIP is relieved, keeping the same zero-WIP invariant (ADR-2607141000).
+   Items with no routing absorb 0 — this leg is a no-op for existing builds."
   (:require [kotoba.plm.db :as db]
             [kotoba.plm.item :as plm]
             [kotoba.plm.cost :as cost]
+            [kotoba.plm.routing :as routing]
             [kotoba.plm.erp :as erp]))
 
 (defn- inv-id [iid] (str "INV-" iid))
@@ -33,17 +38,20 @@
                                       {:component child :need need :on-hand onh})))
                     {:child child :need need :cstd cstd :new-onh (- onh need) :value (* cstd need)}))
           comps (vec comps)
-          wip   (reduce + 0M (map :value comps))
+          mat-wip (reduce + 0M (map :value comps))
+          proc  (* (routing/process-cost d parent) qty)                  ; BOP labor/overhead absorbed, 0 with no routing
+          wip   (+ mat-wip proc)
           pstd  (or (db/attr d :erp.inventory/std-cost    [:erp.inventory/id (inv-id parent)])
-                    (cost/rolled-cost d parent))
+                    (cost/rolled-cost d parent nil {:include-process? true}))
           ponh  (or (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id (inv-id parent)]) 0M)
           pval  (* pstd qty)
           t     (erp/now)
           jid   (str "JRN-PC-" parent "-" (.getTime t))
           jtid  "jrn"
           lines (concat
-                  [{:account "1500" :debit wip}]                          ; components → WIP
+                  [{:account "1500" :debit wip}]                          ; components + absorbed labor/oh → WIP
                   (for [c comps] {:account "1400" :credit (:value c) :item (:child c)})
+                  (when (pos? proc) [{:account "5100" :credit proc}])     ; labor/overhead absorbed out of expense
                   [{:account "1400" :debit pval :item parent}             ; finished goods in
                    {:account "1500" :credit pval}])]                      ; WIP relieved
       (db/tx! conn
@@ -58,4 +66,5 @@
               (for [c comps]
                 {:erp.inventory/id (inv-id (:child c)) :erp.inventory/qty-on-hand (:new-onh c)})))
       {:ok true :item parent :completed qty :wip-cleared wip :finished-value pval
+       :process-cost proc
        :consumed (mapv #(select-keys % [:child :need]) comps)})))

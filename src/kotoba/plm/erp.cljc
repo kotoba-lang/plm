@@ -19,7 +19,8 @@
   [{:erp.account/code "1400" :erp.account/name "Inventory"                     :erp.account/type :asset}
    {:erp.account/code "1500" :erp.account/name "Work In Process"               :erp.account/type :asset}
    {:erp.account/code "2150" :erp.account/name "GR/IR Clearing"                :erp.account/type :liability}
-   {:erp.account/code "5900" :erp.account/name "Inventory Revaluation Variance" :erp.account/type :expense}])
+   {:erp.account/code "5900" :erp.account/name "Inventory Revaluation Variance" :erp.account/type :expense}
+   {:erp.account/code "5100" :erp.account/name "Labor & Overhead Absorbed"      :erp.account/type :expense}])
 
 ;; ───────────────────────────── builders ────────────────────────────────────
 

@@ -1,9 +1,14 @@
 (ns kotoba.plm.mrp
   "MRP — explode a make-item demand through the effective MBOM into buy-leaf
    gross requirements, net against perpetual on-hand, and auto-raise purchase
-   orders for the shortfall (ADR-2606171400 §4: MRP demand → po.created)."
+   orders for the shortfall (ADR-2606171400 §4: MRP demand → po.created).
+
+   plan-from-mps / mrp-run-from-mps! (ADR-2607141000) add MPS as one more
+   demand source by delegating straight into plan / mrp-run! — the explicit-
+   demand arities below are unchanged."
   (:require [kotoba.plm.db :as db]
             [kotoba.plm.item :as plm]
+            [kotoba.plm.mps :as mps]
             [kotoba.plm.erp :as erp]))
 
 (defn gross-requirements
@@ -61,3 +66,20 @@
     (when (seq tx) (db/tx! conn tx))
     {:ok true :parent parent-id :demand (erp/->bigdec demand)
      :plan rows :ordered (mapv #(select-keys % [:item :net :unit-cost]) orders)}))
+
+(defn plan-from-mps
+  "Pure MRP plan for `parent-id`, with demand summed from :approved MPS lines
+   within [from to) (kotoba.plm.mps/approved-demand-for-item). MBOM
+   effectivity is evaluated as of `to`. Delegates entirely to `plan` — no
+   duplicated explosion logic."
+  [d parent-id from to]
+  (plan d parent-id (mps/approved-demand-for-item d parent-id from to) to))
+
+(defn mrp-run-from-mps!
+  "Run MRP for `parent-id` using :approved MPS demand within [from to) as the
+   demand source. Delegates to mrp-run! — identical PO-raising / OCEL
+   behavior once the demand quantity is resolved."
+  [conn parent-id from to]
+  (let [d      (db/db conn)
+        demand (mps/approved-demand-for-item d parent-id from to)]
+    (mrp-run! conn parent-id demand)))

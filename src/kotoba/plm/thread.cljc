@@ -47,7 +47,7 @@
         (let [result
               (if (= mb :make)
                 (let [d1      (db/db conn)
-                      rolled  (cost/rolled-cost d1 iid)
+                      rolled  (cost/rolled-cost d1 iid nil {:include-process? true})
                       inv-tid "inv"]                    ; tempid links the new inventory row
                   (db/tx! conn
                     [{:db/id                     inv-tid
@@ -133,7 +133,7 @@
               (vec (for [pid targets]
                      (let [d1    (db/db conn)
                            old   (or (db/attr d1 :erp.inventory/std-cost    [:erp.inventory/id (inv-id pid)]) 0M)
-                           new   (cost/rolled-cost d1 pid)
+                           new   (cost/rolled-cost d1 pid nil {:include-process? true})
                            onh   (or (db/attr d1 :erp.inventory/qty-on-hand [:erp.inventory/id (inv-id pid)]) 0M)
                            reval (* (- new old) onh)
                            t     (erp/now)
