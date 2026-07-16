@@ -70,6 +70,47 @@
    {:db/ident :plm.eco/cost-impact  :db/valueType :db.type/bigdec  :db/cardinality :db.cardinality/one}
    {:db/ident :plm.eco/released-at  :db/valueType :db.type/instant :db/cardinality :db.cardinality/one}
 
+   ;; ─────────────────────────── BOP: work center + routing ─────────────────
+   {:db/ident :plm.wc/id           :db/valueType :db.type/string  :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity  :db/doc "Work center key."}
+   {:db/ident :plm.wc/name         :db/valueType :db.type/string  :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.wc/rate         :db/valueType :db.type/bigdec  :db/cardinality :db.cardinality/one
+    :db/doc "Cost absorption rate, currency per hour (labor + overhead)."}
+
+   {:db/ident :plm.op/id           :db/valueType :db.type/string  :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity  :db/doc "Edge key = \"<item>|<seq>\"."}
+   {:db/ident :plm.op/item         :db/valueType :db.type/ref     :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.op/seq          :db/valueType :db.type/long    :db/cardinality :db.cardinality/one
+    :db/doc "Routing step order, ascending."}
+   {:db/ident :plm.op/name         :db/valueType :db.type/string  :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.op/work-center  :db/valueType :db.type/ref     :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.op/std-time-hr  :db/valueType :db.type/bigdec  :db/cardinality :db.cardinality/one
+    :db/doc "Run time per unit, hours."}
+   {:db/ident :plm.op/setup-time-hr :db/valueType :db.type/bigdec :db/cardinality :db.cardinality/one
+    :db/doc "Setup time per lot, hours (amortised per-unit by callers as needed)."}
+
+   ;; ─────────────────────────── MPS: master production schedule ────────────
+   {:db/ident :plm.mps/id          :db/valueType :db.type/string  :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity  :db/doc "Edge key = \"<item>|<period-millis>\"."}
+   {:db/ident :plm.mps/item        :db/valueType :db.type/ref     :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.mps/period      :db/valueType :db.type/instant :db/cardinality :db.cardinality/one
+    :db/doc "Time bucket start date."}
+   {:db/ident :plm.mps/qty         :db/valueType :db.type/bigdec  :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.mps/kind        :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one
+    :db/doc ":forecast (planning estimate) | :firm (committed, MRP-eligible once :approved)."}
+   {:db/ident :plm.mps/state       :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one
+    :db/doc ":draft → :approved. Only :approved lines feed MRP demand."}
+
+   ;; ─────────────────────────── PDM: document / version ────────────────────
+   {:db/ident :plm.doc/id          :db/valueType :db.type/string  :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity}
+   {:db/ident :plm.doc/item        :db/valueType :db.type/ref     :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.doc/kind        :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one
+    :db/doc ":cad | :drawing | :spec | :step."}
+   {:db/ident :plm.doc/version     :db/valueType :db.type/string  :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.doc/checksum    :db/valueType :db.type/string  :db/cardinality :db.cardinality/one}
+   {:db/ident :plm.doc/uri         :db/valueType :db.type/string  :db/cardinality :db.cardinality/one}
+
    ;; ─────────────────────────── ERP: perpetual inventory ───────────────────
    {:db/ident :erp.inventory/id     :db/valueType :db.type/string  :db/cardinality :db.cardinality/one
     :db/unique :db.unique/identity}
