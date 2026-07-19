@@ -1,13 +1,18 @@
 (ns kotoba.plm.thread-test
   (:require [clojure.test :refer [deftest testing is]]
             [kotoba.plm.db :as db]
+            #?(:clj [kotoba.plm.db-host :as db-host])
             [kotoba.plm.item :as plm]
             [kotoba.plm.cost :as cost]
             [kotoba.plm.erp :as erp]
             [kotoba.plm.thread :as thread]))
 
+(defn- fresh [prefix]
+  #?(:clj (db-host/fresh-conn (str prefix (System/nanoTime)))
+     :cljs (throw (ex-info "Datomic Local test oracle is JVM-only" {}))))
+
 (defn- world []
-  (let [conn (db/fresh-conn (str "t-" (System/nanoTime)))]
+  (let [conn (fresh "t-")]
     (db/tx! conn erp/chart)
     (db/tx! conn
       [(plm/item {:part-no "PN-2000" :make-buy :buy :std-unit-cost 100})
@@ -65,7 +70,7 @@
   "Buy item B → Make item S (consumes 1×B) → Make item T (consumes 1×S).
    A grandparent-of-B BOM, so an ECO on B must revalue T too, not just S."
   []
-  (let [conn (db/fresh-conn (str "t-" (System/nanoTime)))]
+  (let [conn (fresh "t-")]
     (db/tx! conn erp/chart)
     (db/tx! conn
       [(plm/item {:part-no "B" :make-buy :buy :std-unit-cost 100})

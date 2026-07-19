@@ -1,6 +1,7 @@
 (ns kotoba.plm.routing-test
   (:require [clojure.test :refer [deftest testing is]]
             [kotoba.plm.db :as db]
+            #?(:clj [kotoba.plm.db-host :as db-host])
             [kotoba.plm.item :as plm]
             [kotoba.plm.routing :as routing]
             [kotoba.plm.cost :as cost]
@@ -9,7 +10,8 @@
             [kotoba.plm.production :as prod]))
 
 (defn- world []
-  (let [conn (db/fresh-conn (str "t-routing-" (System/nanoTime)))]
+  (let [conn #?(:clj (db-host/fresh-conn (str "t-routing-" (System/nanoTime)))
+                :cljs (throw (ex-info "Datomic Local test oracle is JVM-only" {})))]
     (db/tx! conn erp/chart)
     (db/tx! conn
       [(plm/item {:part-no "PN-2000" :make-buy :buy :std-unit-cost 100})

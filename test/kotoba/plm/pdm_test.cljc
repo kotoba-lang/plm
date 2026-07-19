@@ -1,12 +1,14 @@
 (ns kotoba.plm.pdm-test
   (:require [clojure.test :refer [deftest testing is]]
             [kotoba.plm.db :as db]
+            #?(:clj [kotoba.plm.db-host :as db-host])
             [kotoba.plm.item :as plm]
             [kotoba.plm.erp :as erp]
             [kotoba.plm.pdm :as pdm]))
 
 (defn- world []
-  (let [conn (db/fresh-conn (str "t-pdm-" (System/nanoTime)))]
+  (let [conn #?(:clj (db-host/fresh-conn (str "t-pdm-" (System/nanoTime)))
+                :cljs (throw (ex-info "Datomic Local test oracle is JVM-only" {})))]
     (db/tx! conn erp/chart)
     (db/tx! conn [(plm/item {:part-no "PN-1000" :make-buy :make})])
     conn))

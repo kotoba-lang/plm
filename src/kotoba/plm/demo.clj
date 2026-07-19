@@ -6,6 +6,7 @@
    releases an ECO that raises a component's standard cost and watches it ripple
    into a revaluation variance (design change → standard cost → P/L)."
   (:require [kotoba.plm.db :as db]
+            [kotoba.plm.db-host :as db-host]
             [kotoba.plm.item :as plm]
             [kotoba.plm.erp :as erp]
             [kotoba.plm.thread :as thread]
@@ -30,7 +31,7 @@
      (plm/bom-edge {:parent "PN-1000@A" :child "PN-2001@A" :qty 2 :find-no 2 :ref-designator "C1-C2" :view :mbom})]))
 
 (defn -main [& _]
-  (let [conn (db/fresh-conn)]
+  (let [conn (db-host/fresh-conn)]
     (seed! conn)
 
     (h "1) Release components + assembly (released-gating: only released → ERP)")

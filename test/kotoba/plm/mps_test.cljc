@@ -1,6 +1,7 @@
 (ns kotoba.plm.mps-test
   (:require [clojure.test :refer [deftest testing is]]
             [kotoba.plm.db :as db]
+            #?(:clj [kotoba.plm.db-host :as db-host])
             [kotoba.plm.item :as plm]
             [kotoba.plm.erp :as erp]
             [kotoba.plm.thread :as thread]
@@ -12,7 +13,8 @@
 (def ^:private horizon-end #inst "2026-09-01T00:00:00.000-00:00")
 
 (defn- world []
-  (let [conn (db/fresh-conn (str "t-mps-" (System/nanoTime)))]
+  (let [conn #?(:clj (db-host/fresh-conn (str "t-mps-" (System/nanoTime)))
+                :cljs (throw (ex-info "Datomic Local test oracle is JVM-only" {})))]
     (db/tx! conn erp/chart)
     (db/tx! conn
       [(plm/item {:part-no "PN-2000" :make-buy :buy :std-unit-cost 100})
