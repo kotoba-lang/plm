@@ -9,15 +9,6 @@
    state, so re-read `(db conn)` after each `tx!` rather than holding a snapshot."
   (:require [kotoba.plm.store :as store]))
 
-(defn fresh-conn
-  "A fresh in-memory Datomic Local store with the schema installed (dev/test).
-   Requires com.datomic/local on the classpath (:datomic / :test alias) — the
-   backend ns is resolved lazily so the zero-dep core loads without it."
-  ([] (fresh-conn "kyber"))
-  ([db-name]
-   #?(:clj ((requiring-resolve 'kotoba.plm.store-datomic/datomic-local) db-name)
-      :cljs (throw (ex-info "fresh-conn (Datomic Local) is JVM-only; use kotoba.plm.store/kotoba with an injected post-fn" {})))))
-
 (defn tx!   [conn tx]          (store/transact! conn tx))
 (defn db    [conn]             conn)        ; store is the current-state handle
 (defn q     [query conn & in]  (store/q* conn query in))   ; query-first (Datomic d/q order)

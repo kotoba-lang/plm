@@ -5,6 +5,7 @@
             [datomic.client.api :as d]
             [clojure.edn :as edn]
             [kotoba.plm.db :as db]
+            [kotoba.plm.db-host :as db-host]
             [kotoba.plm.item :as plm]
             [kotoba.plm.cost :as cost]
             [kotoba.plm.erp :as erp]
@@ -16,7 +17,7 @@
 ;; ─────────────────────────── effectivity ───────────────────────────────────
 
 (deftest effectivity-asof-picks-the-right-child
-  (let [conn (db/fresh-conn (str "eff-" (System/nanoTime)))]
+  (let [conn (db-host/fresh-conn (str "eff-" (System/nanoTime)))]
     (db/tx! conn
       [(plm/item {:part-no "ASM" :make-buy :make})
        (plm/item {:part-no "OLD" :make-buy :buy :std-unit-cost 100})
@@ -38,7 +39,7 @@
 ;; ─────────────────────────── MRP → PO ──────────────────────────────────────
 
 (defn- mrp-world []
-  (let [conn (db/fresh-conn (str "mrp-" (System/nanoTime)))]
+  (let [conn (db-host/fresh-conn (str "mrp-" (System/nanoTime)))]
     (db/tx! conn erp/chart)
     (db/tx! conn
       [(plm/item {:part-no "P"  :make-buy :make})
@@ -70,7 +71,7 @@
 ;; ─────────────────────────── revision supersede ────────────────────────────
 
 (deftest revision-supersede-obsoletes-prior
-  (let [conn (db/fresh-conn (str "rev-" (System/nanoTime)))]
+  (let [conn (db-host/fresh-conn (str "rev-" (System/nanoTime)))]
     (db/tx! conn
       [(plm/item {:part-no "SUB" :make-buy :buy :std-unit-cost 100})
        (plm/item {:part-no "ASM" :make-buy :make})])
