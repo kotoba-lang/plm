@@ -15,6 +15,39 @@ Pages: https://kotoba-lang.github.io/plm/
 
 This is an OSS workbench skeleton for 製品ライフサイクル管理. It does not claim proprietary compatibility with commercial systems. It focuses on open artifact registries, policy-gated runners, coverage/maturity scoring, and EDN handoff.
 
+## Inventory has two registers
+
+`:erp.inventory/qty-on-hand` is **custody** — what is on the floor and can be
+consumed, and the basis `mrp/plan` nets against. `:erp.inventory/qty-accounting`
+is **ownership**. They are equal for every ordinary movement and differ for the
+cases one column cannot express:
+
+| movement | custody | ownership | example |
+|---|---|---|---|
+| `transfer` | moves | moves | ordinary purchase or sale |
+| `transferCustody` | moves | — | consignment stock, subcontract material |
+| `transferAllRights` | — | moves | title sale, sale in transit, drop-ship |
+
+Which register a movement touches is read from the pinned
+[Valueflows](https://www.valueflo.ws/) action behaviour table
+([`ws-valueflo-vocabulary`](https://github.com/kotoba-lang/ws-valueflo-vocabulary)),
+not restated here.
+
+```clojure
+(require '[kotoba.plm.registers :as reg])
+
+(reg/posting d "INV-X" :transferCustody 5M {:side :receiver})
+;=> {:ok? true :tx {:erp.inventory/id "INV-X" :erp.inventory/qty-on-hand 15M}}
+;;   ownership untouched — consignment does not inflate the balance sheet
+
+(reg/divergence d ["INV-A" "INV-B"])   ; held-not-owned / owned-not-held rows
+```
+
+Rows written before the second register existed have no accounting quantity.
+`reg/accounting-or-onhand` returns `{:value 7M :source :onhand-fallback}` rather
+than a bare number, because a legacy row and a row whose registers happen to
+agree are different facts.
+
 ## Verify
 
 ```sh
