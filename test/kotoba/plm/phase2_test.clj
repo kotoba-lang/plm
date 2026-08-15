@@ -104,6 +104,17 @@
         (is (= 0M  (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id "INV-RR@A"])))
         (is (= 0M  (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id "INV-CC@A"])))
         (is (= 10M (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id "INV-P@A"]))))
+      (testing "and the ownership register moved with it, through the real posting path"
+        ;; kotoba.plm.registers has unit tests, but they do not go through
+        ;; receive-goods! or complete-production!. Without these four
+        ;; assertions the suite would pass while qty-accounting was never
+        ;; written at all -- nothing else here reads it.
+        (doseq [inv ["INV-RR@A" "INV-CC@A" "INV-P@A"]]
+          (is (= (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id inv])
+                 (db/attr d :erp.inventory/qty-accounting [:erp.inventory/id inv]))
+              (str inv ": every plm posting is a full-title movement, so the two registers agree")))
+        (is (some? (db/attr d :erp.inventory/qty-accounting [:erp.inventory/id "INV-P@A"]))
+            "recorded, not merely equal to a nil onhand"))
       (testing "WIP closes to zero and GL stays balanced"
         (let [tb (erp/trial-balance d)]
           (is (= 0M (get-in tb ["1500" :balance])) "WIP cleared")

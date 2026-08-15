@@ -115,7 +115,15 @@
    {:db/ident :erp.inventory/id     :db/valueType :db.type/string  :db/cardinality :db.cardinality/one
     :db/unique :db.unique/identity}
    {:db/ident :erp.inventory/item   :db/valueType :db.type/ref     :db/cardinality :db.cardinality/one}
+   ;; TWO registers, per Valueflows: qty-on-hand is CUSTODY (what is on the
+   ;; floor and can be consumed -- the basis MRP nets against), qty-accounting
+   ;; is OWNERSHIP. They are equal for every ordinary movement and differ for
+   ;; consignment stock (held, not owned) and title sales in transit (owned,
+   ;; not held). A single column cannot tell those apart, and guessing either
+   ;; way is wrong: one overstates the balance sheet, the other tells MRP to
+   ;; buy material already in the building. See kotoba.plm.registers.
    {:db/ident :erp.inventory/qty-on-hand :db/valueType :db.type/bigdec :db/cardinality :db.cardinality/one}
+   {:db/ident :erp.inventory/qty-accounting :db/valueType :db.type/bigdec :db/cardinality :db.cardinality/one}
    {:db/ident :erp.inventory/std-cost :db/valueType :db.type/bigdec :db/cardinality :db.cardinality/one
     :db/doc "Current standard unit cost backing on-hand valuation."}
 

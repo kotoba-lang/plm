@@ -54,6 +54,7 @@
                       :erp.inventory/id          (inv-id iid)
                       :erp.inventory/item        [:plm.item/id iid]
                       :erp.inventory/qty-on-hand 0M
+                      :erp.inventory/qty-accounting 0M
                       :erp.inventory/std-cost    rolled}
                      (erp/cost-snapshot iid rolled)
                      (erp/ocel :item.released        "10.0" [[:plm.item/id iid]])
@@ -69,6 +70,7 @@
                       :erp.inventory/id          (inv-id iid)
                       :erp.inventory/item        [:plm.item/id iid]
                       :erp.inventory/qty-on-hand 0M
+                      :erp.inventory/qty-accounting 0M
                       :erp.inventory/std-cost    std}
                      (erp/ocel :item.released        "4.0" [[:plm.item/id iid]])
                      (erp/ocel :inventory.registered "4.0" [inv-tid])])
@@ -86,12 +88,19 @@
     (let [qty   (erp/->bigdec qty)
           std   (db/attr d :erp.inventory/std-cost    [:erp.inventory/id (inv-id iid)])
           onh   (or (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id (inv-id iid)]) 0M)
+          acc   (or (db/attr d :erp.inventory/qty-accounting [:erp.inventory/id (inv-id iid)]) onh)
           value (* std qty)
           t     (erp/now)
           jid   (str "JRN-GR-" iid "-" (.getTime t))
           jtid  "jrn"]                                  ; tempid links the new journal
       (db/tx! conn
-        [{:erp.inventory/id (inv-id iid) :erp.inventory/qty-on-hand (+ onh qty)}
+        ;; A goods receipt under a purchase order moves BOTH registers: we take
+        ;; custody and title at once. Consignment receipts do not, which is why
+        ;; the two columns exist -- post those through kotoba.plm.registers
+        ;; with :transferCustody.
+        [{:erp.inventory/id (inv-id iid)
+          :erp.inventory/qty-on-hand (+ onh qty)
+          :erp.inventory/qty-accounting (+ acc qty)}
          (assoc (erp/journal {:id jid :date t
                               :memo (str "Goods receipt " qty " x " iid " @std " std)
                               :lines [{:account "1400" :debit value :item iid}

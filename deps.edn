@@ -1,5 +1,12 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.12.4"}}
+ ;; ws-valueflo-vocabulary supplies the Valueflows action behaviour table, which
+ ;; decides WHICH inventory register a movement touches (kotoba.plm.registers).
+ ;; A git dep rather than a copy: re-deriving that table here is how one copy
+ ;; gets fixed and the other does not.
+ :deps {org.clojure/clojure {:mvn/version "1.12.4"}
+        io.github.kotoba-lang/ws-valueflo-vocabulary
+        {:git/url "https://github.com/kotoba-lang/ws-valueflo-vocabulary.git"
+         :git/sha "eea3c6bb3ce84a40d7e6f72985d634a5b1c342c9"}}
  :aliases
  {;; GitHub Pages workbench build (shadow-cljs :app) — UI deps isolated here
   ;; so library consumers don't inherit reagent/re-frame/shadow-cljs.

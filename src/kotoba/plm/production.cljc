@@ -32,11 +32,13 @@
           comps (for [{:keys [child] cq :qty} (plm/mbom-children d parent)]
                   (let [need (* cq qty)
                         cstd (or (db/attr d :erp.inventory/std-cost    [:erp.inventory/id (inv-id child)]) 0M)
-                        onh  (or (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id (inv-id child)]) 0M)]
+                        onh  (or (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id (inv-id child)]) 0M)
+                        cacc (or (db/attr d :erp.inventory/qty-accounting [:erp.inventory/id (inv-id child)]) onh)]
                     (when (neg? (- onh need))
                       (throw (ex-info "insufficient component stock"
                                       {:component child :need need :on-hand onh})))
-                    {:child child :need need :cstd cstd :new-onh (- onh need) :value (* cstd need)}))
+                    {:child child :need need :cstd cstd :new-onh (- onh need)
+                     :new-acc (- cacc need) :value (* cstd need)}))
           comps (vec comps)
           mat-wip (reduce + 0M (map :value comps))
           proc  (* (routing/process-cost d parent) qty)                  ; BOP labor/overhead absorbed, 0 with no routing
@@ -44,6 +46,7 @@
           pstd  (or (db/attr d :erp.inventory/std-cost    [:erp.inventory/id (inv-id parent)])
                     (cost/rolled-cost d parent nil {:include-process? true}))
           ponh  (or (db/attr d :erp.inventory/qty-on-hand [:erp.inventory/id (inv-id parent)]) 0M)
+          pacc  (or (db/attr d :erp.inventory/qty-accounting [:erp.inventory/id (inv-id parent)]) ponh)
           pval  (* pstd qty)
           t     (erp/now)
           jid   (str "JRN-PC-" parent "-" (.getTime t))
@@ -56,7 +59,11 @@
                    {:account "1500" :credit pval}])]                      ; WIP relieved
       (db/tx! conn
         (into [;; relieve components, receive finished good
-               {:erp.inventory/id (inv-id parent) :erp.inventory/qty-on-hand (+ ponh qty)}
+               ;; produce increments both registers (vf:produce: accountingEffect
+               ;; and onhandEffect are both increment) -- we make it and we own it
+               {:erp.inventory/id (inv-id parent)
+                :erp.inventory/qty-on-hand (+ ponh qty)
+                :erp.inventory/qty-accounting (+ pacc qty)}
                (assoc (erp/journal {:id jid :date t
                                     :memo (str "Production complete " qty " x " parent " @std " pstd)
                                     :lines lines})
@@ -64,7 +71,10 @@
                (erp/ocel :production.completed "10.0" [[:plm.item/id parent]])
                (erp/ocel :journal.posted       "9.0"  [jtid])]
               (for [c comps]
-                {:erp.inventory/id (inv-id (:child c)) :erp.inventory/qty-on-hand (:new-onh c)})))
+                ;; consume decrements both
+                {:erp.inventory/id (inv-id (:child c))
+                 :erp.inventory/qty-on-hand (:new-onh c)
+                 :erp.inventory/qty-accounting (:new-acc c)})))
       {:ok true :item parent :completed qty :wip-cleared wip :finished-value pval
        :process-cost proc
        :consumed (mapv #(select-keys % [:child :need]) comps)})))
