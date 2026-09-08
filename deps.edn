@@ -3,7 +3,12 @@
  ;; decides WHICH inventory register a movement touches (kotoba.plm.registers).
  ;; A git dep rather than a copy: re-deriving that table here is how one copy
  ;; gets fixed and the other does not.
- :deps {org.clojure/clojure {:mvn/version "1.12.4"}
+ :deps {
+        ;; kotoba.lang.text, not clojure.string. Pinned as an explicit floor:
+        ;; tools.deps takes the NEWEST sha it is shown, so without a floor here
+        ;; this repo silently rides whatever a sibling happens to name.
+        io.github.kotoba-lang/text {:git/sha "73bdb13ae7a3d004b44bca08be03a3191157a38f"}
+       org.clojure/clojure {:mvn/version "1.12.4"}
         io.github.kotoba-lang/ws-valueflo-vocabulary
         {:git/url "https://github.com/kotoba-lang/ws-valueflo-vocabulary.git"
          :git/sha "eea3c6bb3ce84a40d7e6f72985d634a5b1c342c9"}}
