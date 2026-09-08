@@ -1,6 +1,6 @@
 (ns kotoba.plm.core
   "Data-driven kotoba PLM domain model. Pure CLJC, host runners injected outside the browser."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (def stages ["Concept" "Requirements" "CAD/BOM" "Change control" "Supplier review" "Release" "Manufacturing handoff" "Service feedback"])
 
@@ -16,7 +16,7 @@
   (when filename
     (let [parts (str/split filename #"\.")]
       (when (< 1 (count parts))
-        (str "." (str/lower-case (last parts)))))))
+        (str "." (str/lower (last parts)))))))
 
 (defn classify-artifact [filename]
   (let [ext (extension filename)]
