@@ -104,6 +104,6 @@
     [:section#source.panel
      [:h2 "Data Sources"]
      [:p
-      [:a {:href "https://github.com/kotoba-lang/plm/blob/main/src/kotoba/plm/core.cljc"} "core.cljc"] " · "
-      [:a {:href "https://github.com/kotoba-lang/plm/blob/main/src/kotoba/plm/ui.cljc"} "ui.cljc"] " · "
+      [:a {:href "https://github.com/kotoba-lang/plm/blob/main/src/kotoba/plm/core.cljk"} "core.cljc"] " · "
+      [:a {:href "https://github.com/kotoba-lang/plm/blob/main/src/kotoba/plm/ui.cljk"} "ui.cljc"] " · "
       [:a {:href "https://github.com/kotoba-lang/plm/blob/main/resources/plm/domain.edn"} "domain.edn"]]]]])
