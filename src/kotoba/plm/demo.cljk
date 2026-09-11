@@ -1,5 +1,5 @@
 (ns kotoba.plm.demo
-  "End-to-end PLM→ERP thread demo. Run: clojure -M:run (or `bb demo`).
+  "End-to-end PLM→ERP thread demo. Run: kbb -M:run (or `kbb -M:demo`).
 
    Builds a small make assembly over two buy components, releases them (EBOM→
    MBOM→inventory→rolled cost), receives goods (perpetual inventory → GL), then
