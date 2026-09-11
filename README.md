@@ -51,7 +51,7 @@ agree are different facts.
 ## Verify
 
 ```sh
-clojure -M -e '(load-file "src/kotoba/plm/core.cljk") (println :ok)'
+kbb -M -e '(load-file "src/kotoba/plm/core.cljk") (println :ok)'
 python3 -m http.server 8765 --directory docs
 ```
 
@@ -81,5 +81,5 @@ remain in `gftdcojp/cloud-itonami` (`cloud-itonami.kotobase-kg` /
 `cloud-itonami.plm-export`).
 
 ```bash
-clojure -M:test   # 9 tests (phase2 + thread) against Datomic Local
+kbb -M:test   # 9 tests (phase2 + thread) against Datomic Local
 ```
