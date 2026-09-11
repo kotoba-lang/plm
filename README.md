@@ -5,8 +5,8 @@ Open-source PLM workbench as EDN data + portable CLJC lifecycle engine.
 This repository follows the kotoba industrial-app pattern:
 
 - `resources/plm/domain.edn` is the data registry.
-- `src/kotoba/plm/core.cljc` is the pure portable domain engine.
-- `src/kotoba/plm/runner.clj` is a conservative host dry-run runner.
+- `src/kotoba/plm/core.cljk` is the pure portable domain engine.
+- `src/kotoba/plm/runner.cljk` is a conservative host dry-run runner.
 - `docs/index.html` is the GitHub Pages workbench.
 
 Pages: https://kotoba-lang.github.io/plm/
@@ -51,7 +51,7 @@ agree are different facts.
 ## Verify
 
 ```sh
-clojure -M -e '(load-file "src/kotoba/plm/core.cljc") (println :ok)'
+clojure -M -e '(load-file "src/kotoba/plm/core.cljk") (println :ok)'
 python3 -m http.server 8765 --directory docs
 ```
 
