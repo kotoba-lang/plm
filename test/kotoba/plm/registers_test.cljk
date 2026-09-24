@@ -1,6 +1,6 @@
 (ns kotoba.plm.registers-test
   "The three movements a single inventory column cannot tell apart."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotoba.plm.registers :as reg]))
 
 ;; `kotoba.plm.db/attr` takes a real db value. These tests exercise the pure

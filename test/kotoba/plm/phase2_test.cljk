@@ -1,7 +1,7 @@
 (ns kotoba.plm.phase2-test
   "Next-phase coverage: effectivity resolution, MRP→PO, revision supersede,
    and the production (kotoba XRPC) backend round-trip."
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [kotoba.test :refer [deftest testing is]]
             [datomic.client.api :as d]
             [clojure.edn :as edn]
             [kotoba.plm.db :as db]
