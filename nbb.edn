@@ -3,6 +3,9 @@
 ;; scripts/migrate-clojure-test-to-kotoba-test.cljk; :paths copied from deps.edn.
 {:paths ["src" "resources"]
  :deps {
+        ;; kotoba.lang.process replaced the JVM process API in the runner here
+        ;; (2026-09-25). An explicit floor at the west pin.
+        io.github.kotoba-lang/process {:git/sha "db49ea936e53d0bc698be0db79bf96ad86b5f7d0"}
         ;; kotoba.pprint replaced clojure.pprint here (2026-09-24): the same
         ;; bytes (cljs.pprint transcribed). An explicit floor; tools.deps takes the
         ;; NEWEST sha it is shown.
