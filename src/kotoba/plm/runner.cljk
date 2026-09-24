@@ -1,6 +1,6 @@
 (ns kotoba.plm.runner
   "Conservative host-side dry-run runner for kotoba PLM EDN plans."
-  (:require [clojure.edn :as edn]
+  (:require [kotoba.lang.edn :as edn]
             [clojure.java.process :as p]))
 
 (def allowed #{"clojure" "fastqc" "bwa"})

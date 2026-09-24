@@ -3,7 +3,7 @@
    and the production (kotoba XRPC) backend round-trip."
   (:require [kotoba.test :refer [deftest testing is]]
             [datomic.client.api :as d]
-            [clojure.edn :as edn]
+            [kotoba.lang.edn :as edn]
             [kotoba.plm.db :as db]
             [kotoba.plm.db-host :as db-host]
             [kotoba.plm.item :as plm]
