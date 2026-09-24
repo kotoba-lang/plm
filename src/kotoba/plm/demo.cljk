@@ -13,7 +13,7 @@
             [kotoba.plm.mrp :as mrp]
             [kotoba.plm.production :as prod]
             [kotoba.plm.kotobase :as kb]
-            [clojure.pprint :as pp]))
+            [kotoba.pprint :as pp]))
 
 (defn- line [] (println (apply str (repeat 72 "─"))))
 (defn- h [s] (line) (println s) (line))
