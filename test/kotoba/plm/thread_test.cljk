@@ -1,5 +1,5 @@
 (ns kotoba.plm.thread-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [kotoba.test :refer [deftest testing is]]
             [kotoba.plm.db :as db]
             #?(:clj [kotoba.plm.db-host :as db-host])
             [kotoba.plm.item :as plm]
