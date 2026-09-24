@@ -9,7 +9,7 @@
 
    Swapping backend is choosing a Store; the domain primitives are identical.
    (Merged from cloud-itonami's kyber-plm.store — ADR-2607020100 addendum.)"
-  (:require [clojure.edn :as edn]
+  (:require [kotoba.lang.edn :as edn]
             [kotoba.plm.schema :as schema]))
 
 (defprotocol Store
