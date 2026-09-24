@@ -47,7 +47,7 @@
   "An immutable rolled-standard-cost snapshot for `iid`."
   [iid rolled]
   (let [t (now)]
-    {:erp.cost/id    (str iid "@" (.getTime t) "-" (subs (str (java.util.UUID/randomUUID)) 0 8))
+    {:erp.cost/id    (str iid "@" (.getTime t) "-" (subs (str (random-uuid)) 0 8))
      :erp.cost/item  [:plm.item/id iid]
      :erp.cost/rolled (->bigdec rolled)
      :erp.cost/as-of t}))
@@ -55,7 +55,7 @@
 (defn ocel
   "An OCEL 2.0 event. `objects` is a seq of lookup refs (e.g. [:plm.item/id id])."
   [type apqc objects]
-  {:ocel/id      (str "ocel-" (java.util.UUID/randomUUID))
+  {:ocel/id      (str "ocel-" (random-uuid))
    :ocel/type    type
    :ocel/apqc    apqc
    :ocel/at      (now)

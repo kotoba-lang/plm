@@ -53,7 +53,7 @@
         t    (erp/now)
         tx   (mapcat (fn [{:keys [item net unit-cost]}]
                        (let [pid  (str "PO-" item "-" (.getTime t) "-"
-                                       (subs (str (java.util.UUID/randomUUID)) 0 6))
+                                       (subs (str (random-uuid)) 0 6))
                              ptid (str "po-" item)]      ; tempid (items distinct ⇒ unique)
                          [{:db/id ptid
                            :erp.po/id        pid
